@@ -2,3 +2,5 @@
 .vs
 /src/Jim.Quartz/obj
 /src/Jim.Quartz/bin
+/Jim.QuartzDemo/bin
+/Jim.QuartzDemo/obj
