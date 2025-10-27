@@ -28,8 +28,13 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="LICENSE" Pack="true" PackagePath="\" />
-    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="README.md" Pack="true" PackagePath="\">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    
   </ItemGroup>
 
   <ItemGroup>
