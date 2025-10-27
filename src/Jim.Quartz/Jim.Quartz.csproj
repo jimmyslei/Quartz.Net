@@ -1,9 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <!-- NuGet Package Metadata -->
+    <Title>Quartz.Net</Title>
+    <Authors>jimmyLei</Authors>
+    <Company>Jim.Quartz</Company>
+    <Product>Jim.Quartz</Product>
+    <Description>基于 Quartz.NET 封装的轻量级任务调度框架，简化任务调度的使用流程</Description>
+    <PackageProjectUrl>https://github.com/jimmyslei/Quartz.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jimmyslei/Quartz.Net</RepositoryUrl>
+    <PackageTags>Quartz;Scheduler;Task;Job;Scheduling</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>MIT</Copyright>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

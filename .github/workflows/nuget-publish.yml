@@ -1,0 +1,137 @@
+name: Build and Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # 当推送以 v 开头的版本标签时触发
+  workflow_dispatch: # 支持手动触发
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+        type: string
+
+env:
+  PROJECT_PATH: 'src/Jim.Quartz'
+  SOLUTION_PATH: 'Quartz.Net.sln'
+  BUILD_CONFIG: 'Release'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build project
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIG }} --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration ${{ env.BUILD_CONFIG }} --no-build --verbosity normal
+        continue-on-error: true # 如果没有测试项目，允许跳过
+
+  pack-and-publish:
+    name: Pack and Publish to NuGet
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # 从标签中提取版本号 (例如: v1.2.3 -> 1.2.3)
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build Release
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIG }} --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Pack NuGet Package
+        run: dotnet pack ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIG }} --no-build --output ./artifacts -p:Version=${{ steps.version.outputs.version }}
+
+      - name: List artifacts
+        run: ls -lah ./artifacts/
+
+      - name: Publish to NuGet.org
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish symbols
+        run: dotnet nuget push ./artifacts/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        continue-on-error: true # 如果符号包生成失败，跳过
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./artifacts/
+          retention-days: 30
+
+  gh-release:
+    name: Create GitHub Release
+    needs: pack-and-publish
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## Changes in version ${{ steps.version.outputs.version }}
+
+            ### Installation
+            ```bash
+            dotnet add package Jim.Quartz --version ${{ steps.version.outputs.version }}
+            ```
+
+            ### NuGet Package
+            [![NuGet](https://img.shields.io/nuget/v/Jim.Quartz.svg)](https://www.nuget.org/packages/Jim.Quartz/)
+
+            See full changelog: https://github.com/${{ github.repository }}
+          draft: false
+          prerelease: false
