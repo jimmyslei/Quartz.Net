@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Jim.Quartz.Provider;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
 
 #if !NETSTANDARD2_0
 namespace Jim.Quartz;
@@ -13,13 +11,14 @@ namespace Jim.Quartz {
 public static class QuartzExtensions
 {
     /// <summary>
-    /// 注册redis服务
+    /// 注册Quartz服务
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddRedis(this IServiceCollection services)
+    public static IServiceCollection AddJimQuartz(this IServiceCollection services)
     {
-       
+        services.TryAddSingleton<ITaskJobManage, TaskJobManage>();
+        services.AddHostedService<QuartzHostService>();
         return services;
     }
 }
