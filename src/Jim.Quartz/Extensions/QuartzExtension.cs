@@ -1,4 +1,5 @@
-﻿using Jim.Quartz.Provider;
+using Jim.Quartz.Provider;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,8 +19,22 @@ public static class QuartzExtensions
     public static IServiceCollection AddJimQuartz(this IServiceCollection services)
     {
         services.TryAddSingleton<ITaskJobManage, TaskJobManage>();
-        services.AddHostedService<QuartzHostService>();
+        services.AddSingleton<QuartzHostService>();
+        services.AddHostedService(sp => sp.GetRequiredService<QuartzHostService>());
         return services;
+    }
+
+    /// <summary>
+    /// 设置启动定时器执行任务
+    /// </summary>
+    /// <param name="app">应用程序构建器</param>
+    /// <param name="functionJobDelegate">委托函数</param>
+    /// <returns>应用程序构建器</returns>
+    public static IApplicationBuilder UseJimQuart(this IApplicationBuilder app, ExecuteModel executeModel)
+    {
+        var quartzHostService = app.ApplicationServices.GetRequiredService<QuartzHostService>();
+        quartzHostService.SetImmediateJob(executeModel);
+        return app;
     }
 }
 #if NETSTANDARD2_0

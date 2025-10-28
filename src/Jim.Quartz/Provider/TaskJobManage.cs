@@ -9,7 +9,7 @@ namespace Jim.Quartz
 {
     public class TaskJobManage : ITaskJobManage
     {
-       
+
         /// <summary>
         /// 调度器实例
         /// </summary>
@@ -188,5 +188,66 @@ namespace Jim.Quartz
             }
         }
 
+        /// <summary>
+        /// 设置立即执行的任务
+        /// </summary>
+        /// <param name="immediateJobDelegate">立即执行的任务委托</param>
+        public void SetImmediateJob(ExecuteModel executeModel)
+        {
+            // 如果调度器已启动，立即执行任务
+            if (_scheduler != null && !_scheduler.IsShutdown)
+            {
+                ExecuteImmediateJob(executeModel);
+            }
+        }
+
+        /// <summary>
+        /// 执行立即任务
+        /// </summary>
+        private async void ExecuteImmediateJob(ExecuteModel model)
+        {
+            try
+            {
+                JobDataMap map = new JobDataMap
+                {
+                    new KeyValuePair<string, object>("FunctionDelegate", model.Function)
+                };
+
+                IJobDetail job = JobBuilder.Create<Job>()
+                    .WithIdentity(model.ScheduleId)
+                    .UsingJobData(map)
+                    .Build();
+
+                var trigger = TriggerBuilder.Create()
+                .WithIdentity(model.ScheduleId)
+                .StartAt(DateTimeOffset.UtcNow.AddSeconds(model.StartAt)); // {}秒后执行
+                if (model.ExecuteType == ExecuteType.Once)
+                {
+                    trigger.WithSimpleSchedule(o =>
+                    {
+                        o.WithInterval(TimeSpan.FromSeconds(model.Time)).WithRepeatCount(0); // 只执行一次
+                    });
+                }
+                else if (model.ExecuteType == ExecuteType.Repeat)
+                {
+                    trigger.WithSimpleSchedule(o =>
+                    {
+                        o.WithIntervalInSeconds(Convert.ToInt32(model.Time)).RepeatForever(); // 每{}秒执行一次
+                    });
+                }
+                else
+                {
+                    trigger.WithCronSchedule(model.Cron);
+                }
+
+                ITrigger triggerBuild = trigger.Build();
+
+                await _scheduler.ScheduleJob(job, triggerBuild);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"执行立即任务失败: {ex.Message}");
+            }
+        }
     }
 }
