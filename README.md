@@ -8,6 +8,7 @@
 - ✅ 简单易用的 API 设计
 - ✅ 集成 ASP.NET Core 依赖注入
 - ✅ 支持任务启动、停止、暂停、恢复操作
+- ✅ 支持应用启动后立即执行任务
 - ✅ 任务执行监听器支持
 - ✅ 作为后台服务自动启动和关闭
 
@@ -39,6 +40,12 @@ builder.Services.AddControllers();
 builder.Services.AddJimQuartz();
 
 var app = builder.Build();
+
+// 可选：设置应用启动后立即执行的任务
+app.UseJimQuartz(async () => {
+    Console.WriteLine("应用启动后立即执行的任务");
+    await Task.CompletedTask;
+});
 
 app.UseAuthorization();
 app.MapControllers();
@@ -234,7 +241,18 @@ var model = new ExecuteModel
 await _taskJobManage.Start(model);
 ```
 
-### 示例 4：任务管理操作
+### 示例 4：应用启动后立即执行任务
+
+```csharp
+// 在 Program.cs 中设置应用启动后立即执行的任务
+app.UseJimQuartz(async () => {
+    Console.WriteLine("应用启动后立即执行的任务");
+    // 可以执行初始化操作、数据预热等
+    await Task.CompletedTask;
+});
+```
+
+### 示例 5：任务管理操作
 
 ```csharp
 // 暂停任务
