@@ -87,6 +87,9 @@ jobs:
       - name: Publish to NuGet.org
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
+      - name: Publish to GitHub Packages
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+
       - name: Publish symbols
         run: dotnet nuget push ./artifacts/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         continue-on-error: true # 如果符号包生成失败，跳过
@@ -114,8 +117,14 @@ jobs:
           VERSION="${GITHUB_REF#refs/tags/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./artifacts
+
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -125,12 +134,19 @@ jobs:
             ## Changes in version ${{ steps.version.outputs.version }}
 
             ### Installation
+            **From NuGet.org:**
             ```bash
             dotnet add package Jim.Quartz --version ${{ steps.version.outputs.version }}
             ```
 
+            **From GitHub Packages:**
+            ```bash
+            dotnet add package Jim.Quartz --version ${{ steps.version.outputs.version }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+            ```
+
             ### NuGet Package
             [![NuGet](https://img.shields.io/nuget/v/Jim.Quartz.svg)](https://www.nuget.org/packages/Jim.Quartz/)
+            - [GitHub Packages](https://github.com/${{ github.repository }}/packages)
 
             See full changelog: https://github.com/${{ github.repository }}
           draft: false
