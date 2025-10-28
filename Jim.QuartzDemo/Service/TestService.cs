@@ -4,16 +4,16 @@ namespace Jim.QuartzDemo.Service
 {
     public class TestService: ITestService
     {
-        public ExecuteModel TestLog()
+        public List<ExecuteModel> TestLog()
         {
-            return new ExecuteModel
+            return new List<ExecuteModel>{new ExecuteModel
             {
                 ScheduleId = "TestLogJob",
                 StartAt = 5,
                 Time = 5,
                 ExecuteType = ExecuteType.Repeat,
                 Function = FuncLog
-            };
+            }};
         }
 
         public async Task FuncLog()

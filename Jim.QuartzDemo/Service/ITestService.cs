@@ -4,6 +4,6 @@ namespace Jim.QuartzDemo.Service
 {
     public interface ITestService
     {
-        ExecuteModel TestLog();
+        List<ExecuteModel> TestLog();
     }
 }
