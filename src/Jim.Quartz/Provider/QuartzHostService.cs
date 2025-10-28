@@ -7,7 +7,7 @@ namespace Jim.Quartz
     public class QuartzHostService : IHostedService
     {
         private readonly ITaskJobManage _taskJobManage;
-        private ExecuteModel? _executeMode;
+        private List<ExecuteModel>? _executeModes;
 
         public QuartzHostService(ITaskJobManage taskJobManage)
         {
@@ -21,9 +21,9 @@ namespace Jim.Quartz
             var result = _taskJobManage.StartUp();
 
             // 如果设置了立即执行的任务，并且TaskJobManage支持立即执行
-            if (_executeMode != null && _taskJobManage is TaskJobManage taskJobManage)
+            if (_executeModes != null && _taskJobManage is TaskJobManage taskJobManage)
             {
-                taskJobManage.SetImmediateJob(_executeMode);
+                taskJobManage.SetImmediateJob(_executeModes);
             }
 
             return result;
@@ -40,14 +40,14 @@ namespace Jim.Quartz
         /// 设置立即执行的任务
         /// </summary>
         /// <param name="immediateJobDelegate">立即执行的任务委托</param>
-        public void SetImmediateJob(ExecuteModel executeModel)
+        public void SetImmediateJob(List<ExecuteModel> executeModels)
         {
-            _executeMode = executeModel;
+            _executeModes = executeModels;
 
             // 如果TaskJobManage已经启动，直接设置立即执行的任务
             if (_taskJobManage is TaskJobManage taskJobManage)
             {
-                taskJobManage.SetImmediateJob(executeModel);
+                taskJobManage.SetImmediateJob(executeModels);
             }
         }
     }

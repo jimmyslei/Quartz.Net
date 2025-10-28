@@ -30,10 +30,10 @@ public static class QuartzExtensions
     /// <param name="app">应用程序构建器</param>
     /// <param name="functionJobDelegate">委托函数</param>
     /// <returns>应用程序构建器</returns>
-    public static IApplicationBuilder UseJimQuart(this IApplicationBuilder app, ExecuteModel executeModel)
+    public static IApplicationBuilder UseJimQuart(this IApplicationBuilder app, List<ExecuteModel> executeModels)
     {
         var quartzHostService = app.ApplicationServices.GetRequiredService<QuartzHostService>();
-        quartzHostService.SetImmediateJob(executeModel);
+        quartzHostService.SetImmediateJob(executeModels);
         return app;
     }
 }
