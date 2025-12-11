@@ -210,41 +210,44 @@ namespace Jim.Quartz
             {
                 try
                 {
-                    JobDataMap map = new JobDataMap
-                {
-                    new KeyValuePair<string, object>("FunctionDelegate", model.Function)
-                };
+                    Task.Run(() =>
+                    {
+                        JobDataMap map = new JobDataMap
+                        {
+                            new KeyValuePair<string, object>("FunctionDelegate", model.Function)
+                        };
 
-                    IJobDetail job = JobBuilder.Create<Job>()
+                        IJobDetail job = JobBuilder.Create<Job>()
+                            .WithIdentity(model.ScheduleId)
+                            .UsingJobData(map)
+                            .Build();
+
+                        var trigger = TriggerBuilder.Create()
                         .WithIdentity(model.ScheduleId)
-                        .UsingJobData(map)
-                        .Build();
-
-                    var trigger = TriggerBuilder.Create()
-                    .WithIdentity(model.ScheduleId)
-                    .StartAt(DateTimeOffset.UtcNow.AddSeconds(model.StartAt)); // {}秒后执行
-                    if (model.ExecuteType == ExecuteType.Once)
-                    {
-                        trigger.WithSimpleSchedule(o =>
+                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(model.StartAt)); // {}秒后执行
+                        if (model.ExecuteType == ExecuteType.Once)
                         {
-                            o.WithInterval(TimeSpan.FromSeconds(model.Time)).WithRepeatCount(0); // 只执行一次
-                        });
-                    }
-                    else if (model.ExecuteType == ExecuteType.Repeat)
-                    {
-                        trigger.WithSimpleSchedule(o =>
+                            trigger.WithSimpleSchedule(o =>
+                            {
+                                o.WithInterval(TimeSpan.FromSeconds(model.Time)).WithRepeatCount(0); // 只执行一次
+                            });
+                        }
+                        else if (model.ExecuteType == ExecuteType.Repeat)
                         {
-                            o.WithIntervalInSeconds(Convert.ToInt32(model.Time)).RepeatForever(); // 每{}秒执行一次
-                        });
-                    }
-                    else
-                    {
-                        trigger.WithCronSchedule(model.Cron);
-                    }
+                            trigger.WithSimpleSchedule(o =>
+                            {
+                                o.WithIntervalInSeconds(Convert.ToInt32(model.Time)).RepeatForever(); // 每{}秒执行一次
+                            });
+                        }
+                        else
+                        {
+                            trigger.WithCronSchedule(model.Cron);
+                        }
 
-                    ITrigger triggerBuild = trigger.Build();
+                        ITrigger triggerBuild = trigger.Build();
 
-                    _scheduler.ScheduleJob(job, triggerBuild);
+                        _scheduler.ScheduleJob(job, triggerBuild);
+                    });
                 }
                 catch (Exception ex)
                 {
