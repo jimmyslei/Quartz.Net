@@ -24,6 +24,7 @@ namespace Jim.Quartz
         /// 任务执行类型
         /// </summary>
         public ExecuteType ExecuteType { get; set; }
+        public DayOfWeek WeekDay { get; set; }
         /// <summary>
         /// Cron表达式
         /// 当ExecuteType为Cron时，必须填写此项

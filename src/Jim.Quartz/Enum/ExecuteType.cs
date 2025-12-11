@@ -17,6 +17,10 @@ namespace Jim.Quartz
         /// </summary>
         Repeat,
         /// <summary>
+        /// 每周执行
+        /// </summary>
+        Week,
+        /// <summary>
         /// cron表达式执行
         /// </summary>
         Cron,

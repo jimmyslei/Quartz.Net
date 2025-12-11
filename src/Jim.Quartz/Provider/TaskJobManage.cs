@@ -239,6 +239,15 @@ namespace Jim.Quartz
                                 o.WithIntervalInSeconds(Convert.ToInt32(model.Time)).RepeatForever(); // 每{}秒执行一次
                             });
                         }
+                        else if(model.ExecuteType == ExecuteType.Week)
+                        {
+                            trigger.WithSchedule(DailyTimeIntervalScheduleBuilder.Create()
+                                    .OnDaysOfTheWeek(model.WeekDay) // 在周几执行
+                                    .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(23, 59)) // 23:59开始
+                                    .EndingDailyAt(TimeOfDay.HourAndMinuteOfDay(23, 59))   // 23:59结束
+                                    .WithIntervalInSeconds(59) // 在23:59:59执行
+                                    .WithRepeatCount(0)); // 每周执行一次
+                        }
                         else
                         {
                             trigger.WithCronSchedule(model.Cron);
